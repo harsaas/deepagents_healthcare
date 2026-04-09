@@ -1,0 +1,2 @@
+- human: Summarize conditions/meds and draft discharge plan.
+- ai: To assist you effectively, could you please provide more details about the patient's conditions and medications?
