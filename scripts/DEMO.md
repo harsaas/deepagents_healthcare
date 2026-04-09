@@ -13,6 +13,11 @@ PowerShell:
 
 - Run Python: `./.venv/Scripts/python.exe`
 
+Note:
+
+- `./.venv/Scripts/python.exe` is the correct venv Python path.
+- `.python.exe` is not a valid command and will fail.
+
 If dependencies are missing, install the project (editable):
 
 - `./.venv/Scripts/python.exe -m pip install -e .`
@@ -22,6 +27,10 @@ If dependencies are missing, install the project (editable):
 Runs a small LangGraph workflow with checkpointing and a conditional “offload memory to disk” step.
 
 - `./.venv/Scripts/python.exe -m scripts.main`
+
+Or use the helper script:
+
+- `./run_main.ps1`
 
 What to look for:
 
