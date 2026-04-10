@@ -16,29 +16,29 @@ flowchart LR
 
   subgraph Repo[deepagents_healthcare repo]
     subgraph Scripts[scripts/]
-      MAIN[scripts/main.py<br/>LangGraph-only demo]
-      DA[scripts/deep_agent_healthcare.py<br/>DeepAgents discharge workflow]
-      MCP[scripts/medical_mcp.py<br/>FastMCP server (optional)]
+      MAIN["scripts/main.py (LangGraph-only demo)"]
+      DA["scripts/deep_agent_healthcare.py (DeepAgents discharge workflow)"]
+      MCP["scripts/medical_mcp.py (FastMCP server, optional)"]
     end
 
     subgraph Data[Local data]
-      CSV[synthea_sample_data_csv_latest/*.csv<br/>(patients, conditions, meds, ...)]
+      CSV["synthea_sample_data_csv_latest/*.csv (patients, conditions, meds, ...)"]
     end
 
     subgraph Persistence[Persistence]
-      DB1[(langgraph_demo.db<br/>SQLite checkpointer)]
-      DB2[(healthcare_agent.db<br/>SQLite checkpointer)]
+      DB1[(langgraph_demo.db: SQLite checkpointer)]
+      DB2[(healthcare_agent.db: SQLite checkpointer)]
     end
 
     subgraph Outputs[Generated artifacts]
-      WS1[workspaces/{patient_id}/session_summary.txt<br/>(LangGraph demo output)]
-      WS2[patient_workspace/{patient_id}/discharge_summary_{patient_id}.md<br/>(DeepAgents output)]
+      WS1["workspaces/{patient_id}/session_summary.txt (LangGraph output)"]
+      WS2["patient_workspace/{patient_id}/discharge_summary_{patient_id}.md (DeepAgents output)"]
     end
 
     subgraph AgentInternals[DeepAgents internals]
-      AG[Deep Agent<br/>(planning + tools)]
-      SUB[Sub-agent: pharmacy_expert<br/>(med safety checks)]
-      FS[FilesystemBackend<br/>(patient-scoped)]
+      AG["Deep Agent (planning + tools)"]
+      SUB["Sub-agent: pharmacy_expert (med safety checks)"]
+      FS["FilesystemBackend (patient-scoped)"]
     end
   end
 
