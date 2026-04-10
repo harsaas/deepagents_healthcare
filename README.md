@@ -1,19 +1,70 @@
-MediFlow: Autonomous Clinical Discharge CoordinatorBuilt with LangGraph + DeepAgents + FastMCPMediFlow is an agentic healthcare system designed to solve the "Goldfish Memory" problem in clinical AI. While standard chatbots struggle with context limits and hallucinate when reading long medical histories, MediFlow uses a Deep Agent architecture to decompose tasks, offload memory to a virtual workspace, and maintain safety via human-in-the-loop checkpoints.🚀 
+# MediFlow — Autonomous Clinical Discharge & Follow-up Coordinator
 
+Built with **LangGraph + DeepAgents + FastMCP**.
 
+MediFlow is an agentic healthcare system designed to address the “Goldfish Memory” problem in clinical AI: long medical histories don’t fit cleanly into a single prompt, and critical facts (e.g., allergies) can be missed. This project demonstrates a “deep agent” approach that decomposes work into steps, offloads context to a patient-scoped workspace, and optionally gates final report writing with human approval.
 
-The Core Problem: Context BloatIn healthcare, context is a double-edged sword.The Risk: Stuffer 10 years of patient history into a prompt, and the model misses the Penicillin allergy on page 4.The Solution: MediFlow doesn't "read" everything at once. It uses a Virtual Filesystem to offload data, reading only what it needs for the specific sub-task at hand.
+“Discharge decision” is backed by both qualitative reasoning and quantitative modeling.
 
-
-✨ Key "Deep Agent" Features1. 🧠 Autonomous Planning & DelegationThe agent doesn't just "chat." It uses a Supervisor to write a task-list (via the write_todos tool). It then spawns specialized sub-agents:EHR Miner: Queries the Synthea database via FastMCP.Pharmacy Auditor: An isolated sub-agent dedicated only to drug-to-drug interaction checks.
-
-2. 📁 Virtual Filesystem (Context Offloading)To keep the LLM sharp and costs low, the agent offloads heavy context to a local workspace.Write: Large patient records are summarized and stored as .txt or .json files.Read: The agent "picks up" these files only when necessary, keeping the active context window lean.Artifacts: Final discharge summaries are generated as Markdown files: patient_workspace/<id>/discharge_summary.md.
-
-3. 💾 State PersistenceUsing a SQLite Checkpointer, the state is never lost.If the system crashes or the user closes the app, the agent resumes from the exact node where it left off.This allows for "Multi-day workflows" common in clinical settings.
-
-4. 🛑 Human-in-the-Loop (HITL)Safety is mandatory. The graph includes a Breakpoint before any final medical report is generated.Note: The agent pauses for an "MD Signature" (User Approval) before committing the final discharge file to the workspace.
-
-
- "Discharge Decision" is backed by both qualitative reasoning and quantitative modeling.
 <img width="150" height="306" alt="image" src="https://github.com/user-attachments/assets/456d0a59-5a58-4efd-ad76-d886161c54a8" />
 
+## Architecture
+
+```mermaid
+flowchart LR
+  U[User]
+
+  subgraph Repo[deepagents_healthcare repo]
+    subgraph Scripts[scripts/]
+      MAIN[scripts/main.py\nLangGraph-only demo]
+      DA[scripts/deep_agent_healthcare.py\nDeepAgents discharge workflow]
+      MCP[scripts/medical_mcp.py\nFastMCP server (optional)]
+    end
+
+    subgraph Data[Local data]
+      CSV[synthea_sample_data_csv_latest/*.csv\n(patients, conditions, meds, ...)]
+    end
+
+    subgraph Persistence[Persistence]
+      DB1[(langgraph_demo.db\nSQLite checkpointer)]
+      DB2[(healthcare_agent.db\nSQLite checkpointer)]
+    end
+
+    subgraph Outputs[Generated artifacts]
+      WS1[workspaces/<patient_id>/session_summary.txt\n(LangGraph demo output)]
+      WS2[patient_workspace/<patient_id>/discharge_summary_<patient_id>.md\n(DeepAgents output)]
+    end
+
+    subgraph AgentInternals[DeepAgents internals]
+      AG[Deep Agent\n(planning + tools)]
+      SUB[Sub-agent: pharmacy_expert\n(med safety checks)]
+      FS[FilesystemBackend\n(patient-scoped)]
+    end
+  end
+
+  %% LangGraph demo path
+  U -->|patient_id + query| MAIN
+  MAIN -->|checkpoint state| DB1
+  MAIN -->|offload summary| WS1
+
+  %% DeepAgents discharge path
+  U -->|patient_id + discharge query| DA
+
+  %% EHR context retrieval
+  DA -->|reads EHR context| CSV
+
+  %% Optional MCP path (tool transport)
+  DA -. optional USE_MCP=1 .-> MCP
+  MCP -->|reads CSV| CSV
+
+  %% Agent execution + outputs
+  DA --> AG
+  AG --> SUB
+  AG --> FS
+  FS --> WS2
+  DA -->|checkpoint state| DB2
+```
+
+## Demos & tracing
+
+See `scripts/DEMO.md` for run instructions, tracing, and environment flags.
